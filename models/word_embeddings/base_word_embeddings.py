@@ -3,7 +3,8 @@ from keras.layers import SpatialDropout1D, K
 from keras.regularizers import l2, l1
 from traitlets import Float
 
-from models.word_embeddings.custom_layer.embedding_layer import EmbeddingLayer
+from models.word_embeddings.custom_layer import EmbeddingLayer
+from models.word_embeddings.helpers.utils import l2_normalize
 
 
 class BaseWordEmbeddings(object):
@@ -31,9 +32,9 @@ class BaseWordEmbeddings(object):
 
     def create_model(self):
         model_input = Input(shape=(None,), dtype='int32')
-        direction = K.l2_normalize(self.direction_embedding(model_input), axis=-1)
+        direction = l2_normalize(self.direction_embedding(model_input))
         magnitude = self.scalar_magnitude(model_input)
         composite_embedding = self.dropout(direction * magnitude)
 
-        normalized_sum = K.l2_normalize(K.sum(composite_embedding, axis=1))
+        normalized_sum = l2_normalize(K.sum(composite_embedding, axis=1))
         return Model(inputs=model_input, outputs=[normalized_sum])
