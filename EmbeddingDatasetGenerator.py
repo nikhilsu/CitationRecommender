@@ -52,6 +52,8 @@ class EmbeddingDatasetGenerator(object):
     def generate_training_triplets(self, doc_id):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
         d_pos = self.positive_document(doc_id)
+        if len(d_pos) == 0:
+            return []
         n_rand_neg = len(d_pos) // 2
         n_nested_neg = len(d_pos) - n_rand_neg
         d_neg = self.negative_document(doc_id, Technique.RANDOM, n_rand_neg) + \
