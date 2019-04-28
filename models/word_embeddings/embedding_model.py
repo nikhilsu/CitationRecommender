@@ -9,4 +9,4 @@ dataset_generator = EmbeddingDatasetGenerator(RawDataset())
 
 output = dataset_generator.generate_training_data_for_epoch(32)
 end = time.time()
-print(end - start)
+print(end - start, len(output))

@@ -14,31 +14,27 @@ class EmbeddingDatasetGenerator(object):
             return random_id(exclude_list, range_lim, retry_count + 1) if rand_id in excluding else rand_id
 
         lim = self.raw_dataset.count()
-        return [self.raw_dataset.find_one_by_doc_id(random_id(exclude_list, lim, 0)) for _ in range(n)]
+        random_ids = [random_id(exclude_list, lim, 0) for _ in range(n)]
+        return self.raw_dataset.find_by_doc_ids(random_ids)
 
     def __nested_citation_neg_document(self, out_citation_ids, n=None):
         nested_out_citations = []
         for cite_id in out_citation_ids:
             nested_out_citations += self.raw_dataset.out_citation_ids(cite_id)
 
-        nested_cite_neg_docs = []
         ids = range(len(nested_out_citations)) if not n else [randint(0, len(nested_out_citations) - 1) for _ in
                                                               range(n)]
-        for index in ids:
-            nested_cite_neg_docs.append(self.raw_dataset.find_one_by_doc_id(nested_out_citations[index]))
-        return nested_cite_neg_docs
+        return self.raw_dataset.find_by_doc_ids([nested_out_citations[index] for index in ids])
 
-    def positive_document(self, doc_id):
-        return self.raw_dataset.out_citation_docs(doc_id)
+    def positive_document(self, doc_id, max_docs):
+        return self.raw_dataset.out_citation_docs(doc_id, max_docs)
 
     def training_triplets(self, doc_id, max_triplets):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
-        d_pos = self.positive_document(doc_id)
+        out_citation_ids, d_pos = self.positive_document(doc_id, max_triplets)
         if len(d_pos) == 0:
             return []
-        out_citation_ids = [doc['id'] for doc in d_pos]
 
-        d_pos = d_pos[:min(max_triplets, len(d_pos))]
         n_rand_neg = len(d_pos) // 2
         n_nested_neg = len(d_pos) - n_rand_neg
 
@@ -53,7 +49,7 @@ class EmbeddingDatasetGenerator(object):
         # No cross-product
         return list(zip([d_q] * min_len, d_pos[:min_len], d_neg[:min_len]))
 
-    def generate_training_data(self, split, max_triplets=float('-inf')):
+    def generate_training_data(self, split, max_triplets=float('inf')):
         assert 0 < split < 1
         total = self.raw_dataset.count()
         train_split = int(total * split)
