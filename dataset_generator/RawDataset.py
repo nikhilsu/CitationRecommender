@@ -18,7 +18,7 @@ class RawDataset(object):
 
     # outCitations - List of paper IDs which this paper(doc_id) cited.
     def out_citation_ids(self, doc_id):
-        return self.__collection(DBConfig.dataset_collection()).find_one({'id': str(doc_id)})['out_citations']
+        return self.find_one_by_doc_id(doc_id)['out_citations']
 
     def in_citation_docs(self, doc_id):
         in_citation_ids = self.in_citation_ids(doc_id)

@@ -1,20 +1,11 @@
-from enum import Enum
 from random import randint
-
-
-class Technique(Enum):
-    RANDOM = 1
-    NESTED_CITE = 2
 
 
 class EmbeddingDatasetGenerator(object):
     def __init__(self, raw_dataset):
         self.raw_dataset = raw_dataset
 
-    def __random_neg_document(self, doc_id, n=1):
-        out_citations = self.raw_dataset.oout_citations(doc_id)
-        exclude_list = [doc_id] + out_citations
-
+    def __random_neg_document(self, exclude_list, n=1):
         def random_id(excluding, range_lim, retry_count):
             if retry_count > 100:
                 raise Exception('Cannot generate Random Negative Sample')
@@ -25,24 +16,17 @@ class EmbeddingDatasetGenerator(object):
         lim = self.raw_dataset.count()
         return [self.raw_dataset.find_one_by_doc_id(random_id(exclude_list, lim, 0)) for _ in range(n)]
 
-    def __nested_citation_neg_document(self, doc_id, n=None):
-        out_citations = self.raw_dataset.out_citation_ids(doc_id)
+    def __nested_citation_neg_document(self, out_citation_ids, n=None):
         nested_out_citations = []
-        for cite_id in out_citations:
+        for cite_id in out_citation_ids:
             nested_out_citations += self.raw_dataset.out_citation_ids(cite_id)
 
         nested_cite_neg_docs = []
-        ids = range(len(nested_out_citations)) if not n else [randint(0, len(nested_out_citations) - 1) for _ in n]
+        ids = range(len(nested_out_citations)) if not n else [randint(0, len(nested_out_citations) - 1) for _ in
+                                                              range(n)]
         for index in ids:
             nested_cite_neg_docs.append(self.raw_dataset.find_one_by_doc_id(nested_out_citations[index]))
         return nested_cite_neg_docs
-
-    def negative_document(self, doc_id, technique, n):
-        if technique == Technique.RANDOM:
-            return self.__random_neg_document(doc_id, n)
-
-        else:
-            return self.__nested_citation_neg_document(doc_id, n)
 
     def positive_document(self, doc_id):
         return self.raw_dataset.out_citation_docs(doc_id)
@@ -52,14 +36,22 @@ class EmbeddingDatasetGenerator(object):
         d_pos = self.positive_document(doc_id)
         if len(d_pos) == 0:
             return []
-        d_pos = d_pos[:max(max_triplets, len(d_pos))]
+        out_citation_ids = [doc['id'] for doc in d_pos]
+
+        d_pos = d_pos[:min(max_triplets, len(d_pos))]
         n_rand_neg = len(d_pos) // 2
         n_nested_neg = len(d_pos) - n_rand_neg
-        d_neg = self.negative_document(doc_id, Technique.RANDOM, n_rand_neg)
-        d_neg += self.negative_document(doc_id, Technique.NESTED_CITE, n_nested_neg)
+
+        d_neg = self.__nested_citation_neg_document(out_citation_ids, n_nested_neg)
+        exclude_list = [doc_id] + out_citation_ids + [document['id'] for document in d_neg]
+        d_neg += self.__random_neg_document(exclude_list, n_rand_neg)
+
+        min_len = min(len(d_pos), len(d_neg))
+        if min_len == 0:
+            return []
 
         # No cross-product
-        return zip([d_q] * len(d_pos), d_pos, d_neg)
+        return list(zip([d_q] * min_len, d_pos[:min_len], d_neg[:min_len]))
 
     def generate_training_data(self, split, max_triplets=float('-inf')):
         assert 0 < split < 1
