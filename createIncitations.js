@@ -8,9 +8,9 @@ for (var i = 1; i <= maxId; i++) {
 
 for (i = 1; i <= maxId; i++) {
     documentId = i.toString();
-    db.data.findOne({"id": documentId}).out_citations.forEach(citId => {
-        print(citId, documentId);
-        db.inCitations.update({id: citId},
+    db.data.findOne({"id": documentId}).out_citations.forEach(citeId => {
+        print(citeId, documentId);
+        db.inCitations.update({id: citeId},
             {$push: {citedBy: documentId}}
         )
     });
