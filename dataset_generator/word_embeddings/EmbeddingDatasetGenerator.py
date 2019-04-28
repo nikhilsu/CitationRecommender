@@ -74,3 +74,17 @@ class EmbeddingDatasetGenerator(object):
                 train_ids.add(rand_doc_id)
 
         return [self.training_triplets(doc_id, max_triplets) for doc_id in train_ids]
+
+    def generate_training_data_for_epoch(self, batch_size, triplets_per_doc_id=3):
+        remaining = batch_size
+        train_ids = set()
+        training_data = []
+        while remaining > 0:
+            rand_doc_id = randint(1, self.raw_dataset.count())
+            if rand_doc_id not in train_ids:
+                train_ids.add(rand_doc_id)
+                triplets = self.training_triplets(rand_doc_id, min(remaining, triplets_per_doc_id))
+                remaining -= len(triplets)
+                training_data += triplets
+
+        return training_data
