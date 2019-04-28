@@ -1,8 +1,6 @@
 from enum import Enum
 from random import randint
 
-from DBConfig import DBConfig
-
 
 class Technique(Enum):
     RANDOM = 1
@@ -24,7 +22,7 @@ class EmbeddingDatasetGenerator(object):
             # Using recursion to optimize for memory while "re-rolling"
             return random_id(exclude_list, range_lim, retry_count + 1) if rand_id in excluding else rand_id
 
-        lim = self.raw_dataset.count(DBConfig.dataset_collection())
+        lim = self.raw_dataset.count()
         return [self.raw_dataset.find_one_by_doc_id(random_id(exclude_list, lim, 0)) for _ in range(n)]
 
     def __nested_citation_neg_document(self, doc_id, n=None):

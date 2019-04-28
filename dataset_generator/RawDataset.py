@@ -1,5 +1,5 @@
-from DBConfig import DBConfig
-from DBConfig import MongoClient
+from mongo_connector.DBConfig import DBConfig
+from mongo_connector.MongoClient import MongoClient
 
 
 class RawDataset(object):
@@ -34,7 +34,5 @@ class RawDataset(object):
     def find_by_doc_ids(self, doc_ids):
         return [self.find_one_by_doc_id(doc_id) for doc_id in doc_ids]
 
-    def count(self, collection_name):
-        if collection_name in self.database.list_collection_names():
-            return self.__collection(collection_name).count()
-        return -1
+    def count(self):
+        return self.__collection(DBConfig.dataset_collection()).count()

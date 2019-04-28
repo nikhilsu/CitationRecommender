@@ -1,7 +1,5 @@
 import os
 
-import pymongo
-
 
 class DBConfig(object):
     @staticmethod
@@ -36,11 +34,3 @@ class DBConfig(object):
     def database_url():
         return 'mongodb://{}:{}@{}:{}/{}'.format(DBConfig.username(), DBConfig.password(), DBConfig.host(),
                                                  DBConfig.port(), DBConfig.database())
-
-
-class MongoClient(object):
-    @staticmethod
-    def mongo_database():
-        database_url = DBConfig.database_url()
-        client = pymongo.MongoClient(database_url)
-        return client[DBConfig.database()]
