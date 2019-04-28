@@ -1,5 +1,5 @@
-from mongo_connector.DBConfig import DBConfig
-from mongo_connector.MongoClient import MongoClient
+from mongo_connector.db_config import DBConfig
+from mongo_connector.mongo_client import MongoClient
 
 
 class RawDataset(object):

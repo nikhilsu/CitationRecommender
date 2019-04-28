@@ -1,0 +1,3 @@
+
+class EmbeddingFeaturesGenerator(object):
+    pass

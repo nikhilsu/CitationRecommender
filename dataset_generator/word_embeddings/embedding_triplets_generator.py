@@ -1,7 +1,7 @@
 from random import randint
 
 
-class EmbeddingDatasetGenerator(object):
+class EmbeddingTripletsGenerator(object):
     def __init__(self, raw_dataset):
         self.raw_dataset = raw_dataset
 
@@ -26,12 +26,12 @@ class EmbeddingDatasetGenerator(object):
                                                               range(n)]
         return self.raw_dataset.find_by_doc_ids([nested_out_citations[index] for index in ids])
 
-    def positive_document(self, doc_id, max_docs):
+    def __positive_document(self, doc_id, max_docs):
         return self.raw_dataset.out_citation_docs(doc_id, max_docs)
 
-    def training_triplets(self, doc_id, max_triplets):
+    def __training_triplets(self, doc_id, max_triplets):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
-        out_citation_ids, d_pos = self.positive_document(doc_id, max_triplets)
+        out_citation_ids, d_pos = self.__positive_document(doc_id, max_triplets)
         if len(d_pos) == 0:
             return []
 
@@ -49,30 +49,16 @@ class EmbeddingDatasetGenerator(object):
         # No cross-product
         return list(zip([d_q] * min_len, d_pos[:min_len], d_neg[:min_len]))
 
-    def generate_training_data(self, split, max_triplets=float('inf')):
-        assert 0 < split < 1
-        total = self.raw_dataset.count()
-        train_split = int(total * split)
-        i = 1
-        train_ids = set()
-        while i <= train_split:
-            rand_doc_id = randint(1, total)
-            if rand_doc_id not in train_ids:
-                i += 1
-                train_ids.add(rand_doc_id)
-
-        return [self.training_triplets(doc_id, max_triplets) for doc_id in train_ids]
-
-    def generate_training_data_for_epoch(self, batch_size, triplets_per_doc_id=3):
+    def generate_triplets_for_epoch(self, batch_size, triplets_per_doc_id=3):
         remaining = batch_size
-        train_ids = set()
-        training_data = []
+        triplet_ids = set()
+        triplets = []
         while remaining > 0:
             rand_doc_id = randint(1, self.raw_dataset.count())
-            if rand_doc_id not in train_ids:
-                train_ids.add(rand_doc_id)
-                triplets = self.training_triplets(rand_doc_id, min(remaining, triplets_per_doc_id))
+            if rand_doc_id not in triplet_ids:
+                triplet_ids.add(rand_doc_id)
+                triplets = self.__training_triplets(rand_doc_id, min(remaining, triplets_per_doc_id))
                 remaining -= len(triplets)
-                training_data += triplets
+                triplets += triplets
 
-        return training_data
+        return triplets

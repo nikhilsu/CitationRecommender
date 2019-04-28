@@ -1,6 +1,6 @@
 import pymongo
 
-from mongo_connector.DBConfig import DBConfig
+from mongo_connector.db_config import DBConfig
 
 
 class MongoClient(object):
