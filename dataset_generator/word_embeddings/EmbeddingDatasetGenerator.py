@@ -32,7 +32,7 @@ class EmbeddingDatasetGenerator(object):
             nested_out_citations += self.raw_dataset.out_citation_ids(cite_id)
 
         nested_cite_neg_docs = []
-        ids = range(len(nested_out_citations)) if not n else [randint(0, len(nested_out_citations)) for _ in n]
+        ids = range(len(nested_out_citations)) if not n else [randint(0, len(nested_out_citations) - 1) for _ in n]
         for index in ids:
             nested_cite_neg_docs.append(self.raw_dataset.find_one_by_doc_id(nested_out_citations[index]))
         return nested_cite_neg_docs
@@ -47,15 +47,29 @@ class EmbeddingDatasetGenerator(object):
     def positive_document(self, doc_id):
         return self.raw_dataset.out_citation_docs(doc_id)
 
-    def generate_training_triplets(self, doc_id):
+    def training_triplets(self, doc_id):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
         d_pos = self.positive_document(doc_id)
         if len(d_pos) == 0:
             return []
         n_rand_neg = len(d_pos) // 2
         n_nested_neg = len(d_pos) - n_rand_neg
-        d_neg = self.negative_document(doc_id, Technique.RANDOM, n_rand_neg) + \
-                self.negative_document(doc_id, Technique.NESTED_CITE, n_nested_neg)
+        d_neg = self.negative_document(doc_id, Technique.RANDOM, n_rand_neg)
+        d_neg += self.negative_document(doc_id, Technique.NESTED_CITE, n_nested_neg)
 
         # No cross-product
         return zip([d_q] * len(d_pos), d_pos, d_neg)
+
+    def generate_training_data(self, split):
+        assert 0 < split < 1
+        total = self.raw_dataset.count()
+        train_split = int(total * split)
+        i = 1
+        train_ids = set()
+        while i <= train_split:
+            rand_doc_id = randint(1, total)
+            if rand_doc_id not in train_ids:
+                i += 1
+                train_ids.add(rand_doc_id)
+
+        return [self.training_triplets(doc_id) for doc_id in train_ids]
