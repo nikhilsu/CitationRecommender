@@ -47,11 +47,12 @@ class EmbeddingDatasetGenerator(object):
     def positive_document(self, doc_id):
         return self.raw_dataset.out_citation_docs(doc_id)
 
-    def training_triplets(self, doc_id):
+    def training_triplets(self, doc_id, max_triplets):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
         d_pos = self.positive_document(doc_id)
         if len(d_pos) == 0:
             return []
+        d_pos = d_pos[:max(max_triplets, len(d_pos))]
         n_rand_neg = len(d_pos) // 2
         n_nested_neg = len(d_pos) - n_rand_neg
         d_neg = self.negative_document(doc_id, Technique.RANDOM, n_rand_neg)
@@ -60,7 +61,7 @@ class EmbeddingDatasetGenerator(object):
         # No cross-product
         return zip([d_q] * len(d_pos), d_pos, d_neg)
 
-    def generate_training_data(self, split):
+    def generate_training_data(self, split, max_triplets=float('-inf')):
         assert 0 < split < 1
         total = self.raw_dataset.count()
         train_split = int(total * split)
@@ -72,4 +73,4 @@ class EmbeddingDatasetGenerator(object):
                 i += 1
                 train_ids.add(rand_doc_id)
 
-        return [self.training_triplets(doc_id) for doc_id in train_ids]
+        return [self.training_triplets(doc_id, max_triplets) for doc_id in train_ids]
