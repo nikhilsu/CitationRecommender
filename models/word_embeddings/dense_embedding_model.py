@@ -1,3 +1,6 @@
+import os
+
+import numpy as np
 import tensorflow as tf
 from keras import Model
 from keras.layers import Add
@@ -8,8 +11,9 @@ from models.word_embeddings.custom_layer import LambdaScalarMultiplier
 from models.word_embeddings.helpers.utils import triplet_loss, cosine_distance, l2_normalize_layer
 
 
-class DenseWordEmbedding(object):
-    def __init__(self, opts):
+class DenseEmbeddingModel(object):
+    def __init__(self, featurizer, opts):
+        self.featurizer = featurizer
         self.dropout_p = opts.dropout_p
         self.l2_lambda = opts.l2_lambda
         self.l1_lambda = opts.l1_lambda
@@ -24,7 +28,7 @@ class DenseWordEmbedding(object):
         self.abstract_embedding = embeddings
         self.title_embedding_multiplier = LambdaScalarMultiplier(name='title-scalar-multiplier')
         self.abstract_embedding_multiplier = LambdaScalarMultiplier(name='abstract-scalar-multiplier')
-        self.model = self.__compile_dense_model()
+        self.model, self.embedding_model = self.__compile_dense_model()
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
 
@@ -45,9 +49,39 @@ class DenseWordEmbedding(object):
         candidate_input, candidate_model_output = self.__compile_embedding_model('candidate')
         model_output = cosine_distance(query_model_output, candidate_model_output, self.dense_dims, False)
         model_inputs = query_input + candidate_input
-        return Model(inputs=model_inputs, outputs=model_output)
+        return Model(inputs=model_inputs, outputs=model_output), Model(inputs=query_input, outputs=query_model_output)
 
     def fit(self, dataset_generator):
         self.model.fit_generator(generator=dataset_generator,
                                  steps_per_epoch=self.steps_per_epoch,
                                  epochs=self.epochs)
+
+    def predict_dense_embeddings(self, documents, pre_trained_weights_path=None):
+        if pre_trained_weights_path is not None:
+            self.load_embedding_model_weights(pre_trained_weights_path)
+
+        document_embeddings = []
+        for doc in documents:
+            features = self.featurizer.featurize_documents([doc])
+            doc_embedding = self.embedding_model.predict(
+                {
+                    'query-title-text': features['title'],
+                    'query-abstract-text': features['abstract'],
+                    'document-txt': features['abstract'],
+                }
+            )
+            document_embeddings.append(doc_embedding)
+        return np.asarray(document_embeddings)
+
+    def save_weights(self, directory, only_embedding_model=True):
+        self.embedding_model.save_weights(os.path.join(directory, 'embedding_model_weights.h5'))
+        if not only_embedding_model:
+            self.model.save_weights(os.path.join(directory, 'composite_embedding_model.h5'))
+
+    def load_composite_model_weights(self, path):
+        self.model.load_weights(path)
+        print('Loaded Composite Weights')
+
+    def load_embedding_model_weights(self, path):
+        self.embedding_model.load_weights(path)
+        print('Loaded Dense Embedding Weights')

@@ -57,7 +57,7 @@ class DocumentFeaturizer(object):
             common_types_features[i, :len(intersection)] = intersection
         return common_types_features
 
-    def __featurize_documents(self, documents):
+    def featurize_documents(self, documents):
         features = {
             'title':
                 np.asarray([self.__extract_textual_features(doc['title'], self.max_title_len) for doc in documents]),
@@ -70,8 +70,8 @@ class DocumentFeaturizer(object):
 
     def extract_features(self, d_qs, candidates):
 
-        d_q_features = self.__featurize_documents(d_qs)
-        candidate_features = self.__featurize_documents(candidates)
+        d_q_features = self.featurize_documents(d_qs)
+        candidate_features = self.featurize_documents(candidates)
         citation_features = DocumentFeaturizer.__extract_citation_features(candidates)
         common_title_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['title'],
                                                                                    candidate_features['title'])
