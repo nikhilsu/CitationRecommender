@@ -69,17 +69,11 @@ class DocumentFeaturizer(object):
 
         return features
 
-    def extract_features(self, d_qs, candidates):
+    def extract_features(self, d_qs, candidates, for_nn_rank=False):
 
         d_q_features = self.featurize_documents(d_qs)
         candidate_features = self.featurize_documents(candidates)
-        citation_features = DocumentFeaturizer.__extract_citation_features(candidates)
-        common_title_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['title'],
-                                                                                   candidate_features['title'])
-        common_abstract_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['abstract'],
-                                                                                      candidate_features['abstract'])
-
-        return {
+        features = {
             'query-title-text':
                 d_q_features['title'],
             'query-abstract-text':
@@ -87,11 +81,16 @@ class DocumentFeaturizer(object):
             'candidate-title-text':
                 candidate_features['title'],
             'candidate-abstract-text':
-                candidate_features['abstract'],
-            'query-candidate-common-title':
-                common_title_features,
-            'query-candidate-common-abstract':
-                common_abstract_features,
-            'candidate-citation-count':
-                citation_features
+                candidate_features['abstract']
         }
+        if for_nn_rank:
+            citation_features = DocumentFeaturizer.__extract_citation_features(candidates)
+            common_title_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['title'],
+                                                                                       candidate_features['title'])
+            common_abstract_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['abstract'],
+                                                                                          candidate_features[
+                                                                                              'abstract'])
+            features['query-candidate-common-title'] = common_title_features
+            features['query-candidate-common-abstract'] = common_abstract_features
+            features['candidate-citation-count'] = citation_features
+        return features
