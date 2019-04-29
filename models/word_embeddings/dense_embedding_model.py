@@ -31,7 +31,8 @@ class DenseEmbeddingModel(object):
         self.abstract_embedding_multiplier = LambdaScalarMultiplier(name='abstract-scalar-multiplier')
         self.model, self.embedding_model = self.__compile_dense_model()
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
-        self.model.compile(optimizer=optimizer, loss=triplet_loss)
+        self.model.compile(optimizer=optimizer, loss=triplet_loss,
+                           metrics=['accuracy'])
 
         self.callbacks = [
             SaveModelWeights([('dense', self.model), ('embedding', self.embedding_model)], opts.weights_directory,

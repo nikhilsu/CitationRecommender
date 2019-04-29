@@ -1,10 +1,12 @@
 from keras import Input, Model
 from keras.layers import Concatenate, Dense
 from keras.regularizers import l1
+from keras_metrics import binary_precision, binary_recall
 
 from models.word_embeddings.callbacks.save_model_weights import SaveModelWeights
 from models.word_embeddings.custom_layer import EmbeddingLayer
-from models.word_embeddings.helpers.utils import cosine_distance, summation_layer, triplet_loss
+from models.word_embeddings.helpers import cosine_distance, summation_layer
+from models.word_embeddings.helpers import triplet_loss, mean_reciprocal_rank, f1_measure
 
 
 class NNRank(object):
@@ -57,7 +59,8 @@ class NNRank(object):
         output_dense_two = Dense(20, name='dense-2', activation='elu')(output_dense_one)
         nn_rank_output = Dense(1, kernel_initializer='one', name='final-output', activation='sigmoid')(output_dense_two)
         self.model = Model(inputs=model_inputs, outputs=nn_rank_output)
-        self.model.compile(optimizer='nadam', loss=triplet_loss)
+        self.model.compile(optimizer='nadam', loss=triplet_loss,
+                           metrics=['accuracy', mean_reciprocal_rank, binary_precision(), binary_recall(), f1_measure])
 
         self.callbacks = [SaveModelWeights([('nn_rank', self.model)], self.opts.weights_directory,
                                            self.opts.checkpoint_frequency)]

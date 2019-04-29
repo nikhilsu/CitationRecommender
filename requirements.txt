@@ -5,3 +5,4 @@ tensorflow==1.10.0
 numpy==1.14.3
 scikit-learn==0.19.1
 tqdm==4.11.2
+keras_metrics==1.1.0
