@@ -1,4 +1,5 @@
 from config_parser import parse_arguments
+from models.nn_rank import train as nn_rank
 from models.word_embeddings import train as embeddings
 
 if __name__ == '__main__':
@@ -8,3 +9,5 @@ if __name__ == '__main__':
 
     if args.model == 'embeddings':
         embeddings.train(args)
+    elif args.model == 'NNRank':
+        nn_rank.train(args)

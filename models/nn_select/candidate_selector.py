@@ -37,9 +37,13 @@ class CandidateSelector(object):
         doc_ids = np.argsort(cosine_similarities[knn_embeddings]) + 1
         return doc_ids
 
-    def cosine_similarity(self, query_embedding, candidate_ids):
+    def __cos_sim(self, query_embedding, candidate_ids):
         return np.dot(self.embedding_space[candidate_ids - 1],
-                      query_embedding.reshape((self.embeddings_output_shape, )))
+                      query_embedding.reshape((self.embeddings_output_shape,)))
+
+    def cosine_similarity(self, query_doc, candidate_doc):
+        query_embedding = self.dense_embedding_model.predict_dense_embeddings([query_doc])
+        return self.__cos_sim(query_embedding, np.asarray([int(candidate_doc['id'])]))
 
     def fetch_candidates_with_similarities(self, query_document):
         query_embedding = self.dense_embedding_model.predict_dense_embeddings([query_document])
@@ -53,5 +57,5 @@ class CandidateSelector(object):
         candidate_ids, candidate_docs = self.__prune_docs_published_later_than_query(query_document['year'],
                                                                                      candidate_ids_set)
 
-        return sorted(zip(candidate_docs, self.cosine_similarity(query_embedding, candidate_ids)), key=lambda x: x[1],
+        return sorted(zip(candidate_docs, self.__cos_sim(query_embedding, candidate_ids)), key=lambda x: x[1],
                       reverse=True)

@@ -8,9 +8,9 @@ from models.word_embeddings.helpers.utils import cosine_distance, summation_laye
 
 
 class NNRank(object):
-    def __init__(self, nn_rank_embedding_model, dense_dims, opts):
+    def __init__(self, nn_rank_embedding_model, opts):
         self.opts = opts
-        self.dense_dims = dense_dims
+        self.dense_dims = opts.dense_dims
         self.query_text_model = nn_rank_embedding_model['query-text']
         self.query_abstract_model = nn_rank_embedding_model['query-abstract']
         self.candidate_text_model = nn_rank_embedding_model['candidate-text']
@@ -38,7 +38,7 @@ class NNRank(object):
                 input_dim=self.opts.n_features,
                 output_dim=1,
                 mask_zero=True,
-                name="%s-sparse-embedding" % field,
+                name="{}-sparse-embedding".format(field),
                 activity_regularizer=l1(self.opts.l1_lambda)
             )(common_type_input)
             pre_dense_network_output.append(summation_layer()(elementwise_sparse))

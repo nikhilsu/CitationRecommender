@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import tensorflow as tf
 from keras import Model
@@ -84,15 +82,10 @@ class DenseEmbeddingModel(object):
             document_embeddings.append(doc_embedding)
         return np.asarray(document_embeddings)
 
-    def save_weights(self, directory, only_embedding_model=True):
-        self.embedding_model.save_weights(os.path.join(directory, 'embedding_model_weights.h5'))
-        if not only_embedding_model:
-            self.model.save_weights(os.path.join(directory, 'composite_embedding_model.h5'))
-
-    def load_composite_model_weights(self, path):
+    def load_dense_model_weights(self, path):
         self.model.load_weights(path)
-        print('Loaded Composite Weights')
+        print('Loaded Dense Weights')
 
     def load_embedding_model_weights(self, path):
         self.embedding_model.load_weights(path)
-        print('Loaded Dense Embedding Weights')
+        print('Loaded Embedding Weights')

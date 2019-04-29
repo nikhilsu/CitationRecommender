@@ -52,11 +52,15 @@ class DocumentFeaturizer(object):
 
     @staticmethod
     def __extract_common_types_features(d_qs, candidates):
-        common_types = [np.intersect1d(d_qs, candidate) for (d_qs, candidate) in zip(d_qs, candidates)]
+        common_types = [np.intersect1d(d_q, candidate) for (d_q, candidate) in zip(d_qs, candidates)]
         common_types_features = np.zeros_like(d_qs)
         for i, intersection in enumerate(common_types):
             common_types_features[i, :len(intersection)] = intersection
         return common_types_features
+
+    @staticmethod
+    def __extract_sim_scores(d_qs, candidates, candidate_selector):
+        return [candidate_selector.cosine_similarity(d_q, candidate) for (d_q, candidate) in zip(d_qs, candidates)]
 
     def featurize_documents(self, documents):
         features = {
@@ -69,8 +73,8 @@ class DocumentFeaturizer(object):
 
         return features
 
-    def extract_features(self, d_qs, candidates, for_nn_rank=False):
-
+    def extract_features(self, d_qs, candidates, candidate_selector=None):
+        for_nn_rank = candidate_selector is not None
         d_q_features = self.featurize_documents(d_qs)
         candidate_features = self.featurize_documents(candidates)
         features = {
@@ -85,12 +89,14 @@ class DocumentFeaturizer(object):
         }
         if for_nn_rank:
             citation_features = DocumentFeaturizer.__extract_citation_features(candidates)
-            common_title_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['title'],
-                                                                                       candidate_features['title'])
-            common_abstract_features = DocumentFeaturizer.__extract_common_types_features(d_q_features['abstract'],
-                                                                                          candidate_features[
-                                                                                              'abstract'])
-            features['query-candidate-common-title'] = common_title_features
-            features['query-candidate-common-abstract'] = common_abstract_features
+            common_title = DocumentFeaturizer.__extract_common_types_features(d_q_features['title'],
+                                                                              candidate_features['title'])
+            common_abstract = DocumentFeaturizer.__extract_common_types_features(d_q_features['abstract'],
+                                                                                 candidate_features['abstract'])
+            similarity_score_features = DocumentFeaturizer.__extract_sim_scores(d_qs, candidates, candidate_selector)
+
+            features['query-candidate-common-title'] = common_title
+            features['query-candidate-common-abstract'] = common_abstract
             features['candidate-citation-count'] = citation_features
+            features['similarity_score'] = similarity_score_features
         return features
