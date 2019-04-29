@@ -32,12 +32,18 @@ class DenseEmbeddingModel(object):
         self.model, self.embedding_model = self.__compile_dense_model()
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
+        self.nn_rank_model = dict()
 
-        self.callbacks = [SaveModelWeights(self.embedding_model, opts.weights_directory, opts.checkpoint_frequency)]
+        self.callbacks = [
+            SaveModelWeights(self.model, self.embedding_model, opts.weights_directory, opts.checkpoint_frequency)
+        ]
 
     def __compile_embedding_model(self, document_name):
         title_model = self.title_embedding.create_model('{}-{}'.format(document_name, 'title'))
         abstract_model = self.abstract_embedding.create_model('{}-{}'.format(document_name, 'abstract'))
+        self.nn_rank_model['{}-title'.format(document_name)] = title_model
+        self.nn_rank_model['{}-abstract'.format(document_name)] = abstract_model
+
         title_weights = self.title_embedding_multiplier(title_model.outputs[0])
         abstract_weights = self.abstract_embedding_multiplier(abstract_model.outputs[0])
 
