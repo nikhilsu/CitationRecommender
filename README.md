@@ -1,5 +1,7 @@
-# CitationRecommender
-Project to recommend Citations to a research paper
+# Citation Recommender
+Project to recommend Citations given a document. The scope of the project is to replicate the research done as part of [Content-Based Citation Recommendation](https://arxiv.org/pdf/1802.08301.pdf) paper.
+
+Credits: [citeomatic (GitHub)](https://github.com/allenai/citeomatic/)
 
 ### Project Dependencies
 - The project dependencies(python libraries) can be installed by running the following command:-
@@ -42,4 +44,19 @@ $ python train.py --model NNRank --embeddings_model_weights_path "<path_to_embed
 
 ```bash
 $ python test.py --model NNSelect --embeddings_model_weights_path "<path_to_weights>"
+```
+
+
+#### Testing NN_Rank Model
+- NN_Rank model can be tested by utilizing nn_rank_weights in the `weights` directory.
+- Run the following command to test the model
+- This model is evaluated based on various Metrics like:-
+    1. Precision
+    2. Accuracy
+    3. Mean Reciprocal Rank
+    4. Recall
+    5. F1 measure
+
+```bash
+$ python test.py --model NNRank --nn_rank_model_weights_path "<path_to_nn_rank_weights>"
 ```
