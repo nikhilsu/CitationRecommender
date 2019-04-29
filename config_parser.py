@@ -18,4 +18,5 @@ def parse_arguments():
     parser.add_argument('--l1_lambda', default=9.9999999999999995e-07, required=False)
     parser.add_argument('--l2_lambda', default=0.0, required=False)
     parser.add_argument('--dropout_p', default=0.1, required=False)
+    parser.add_argument('--knn', default=100, required=False)
     return parser

@@ -7,7 +7,6 @@ from models.word_embeddings.dense_embedding_model import DenseEmbeddingModel
 parser = parse_arguments()
 parser.add_argument('--model', choices=['NNSelect', 'NNRank'], help="name of the model to run")
 parser.add_argument('--embeddings_model_weights_path', help=".h5 file containing weights", required=True)
-parser.add_argument('--knn', default=100, required=False)
 args = parser.parse_args()
 
 if args.model == 'NNSelect':
