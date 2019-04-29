@@ -35,7 +35,8 @@ class DenseEmbeddingModel(object):
         self.nn_rank_model = dict()
 
         self.callbacks = [
-            SaveModelWeights(self.model, self.embedding_model, opts.weights_directory, opts.checkpoint_frequency)
+            SaveModelWeights([('dense', self.model), ('embedding', self.embedding_model)], opts.weights_directory,
+                             opts.checkpoint_frequency)
         ]
 
     def __compile_embedding_model(self, document_name):
