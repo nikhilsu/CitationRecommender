@@ -62,6 +62,10 @@ class NNRank(object):
         self.callbacks = [SaveModelWeights([('nn_rank', self.model)], self.opts.weights_directory,
                                            self.opts.checkpoint_frequency)]
 
+    def load_nn_rank_model_weights(self, path):
+        self.model.load_weights(path)
+        print('Loaded NNRank Weights')
+
     def fit(self, dataset_generator):
         self.model.fit_generator(generator=dataset_generator,
                                  steps_per_epoch=self.opts.steps_per_epoch,
