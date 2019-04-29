@@ -29,8 +29,8 @@ class BaseWordEmbeddings(object):
 
         self.dropout_layer = SpatialDropout1D(self.dropout_p)
 
-    def create_model(self):
-        model_input = Input(shape=(None,), dtype='int32')
+    def create_model(self, name_prefix):
+        model_input = Input(shape=(None,), dtype='int32', name='{}-text'.format(name_prefix))
         direction_embeddings = self.direction_embedding(model_input)
         magnitude_embedding = self.scalar_magnitude(model_input)
         normalized_direction_embeddings = l2_normalize_layer()(direction_embeddings)
@@ -39,4 +39,4 @@ class BaseWordEmbeddings(object):
 
         summation_composite_embeddings = summation_layer()(composite_embedding)
         normalized_sum = l2_normalize_layer()(summation_composite_embeddings)
-        return Model(inputs=model_input, outputs=[normalized_sum])
+        return Model(inputs=model_input, outputs=[normalized_sum], name='{}-embedding-model'.format(name_prefix))

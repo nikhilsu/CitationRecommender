@@ -22,18 +22,17 @@ class DenseWordEmbedding(object):
                                         self.dropout_p)
         self.title_embedding = embeddings
         self.abstract_embedding = embeddings
-
+        self.title_embedding_multiplier = LambdaScalarMultiplier(name='title-scalar-multiplier')
+        self.abstract_embedding_multiplier = LambdaScalarMultiplier(name='abstract-scalar-multiplier')
         self.model = self.__compile_dense_model()
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
 
-    def __compile_embedding_model(self):
-        title_model = self.title_embedding.create_model()
-        abstract_model = self.abstract_embedding.create_model()
-        title_embedding_multiplier = LambdaScalarMultiplier()
-        abstract_embedding_multiplier = LambdaScalarMultiplier()
-        title_weights = title_embedding_multiplier(title_model.outputs[0])
-        abstract_weights = abstract_embedding_multiplier(abstract_model.outputs[0])
+    def __compile_embedding_model(self, document_name):
+        title_model = self.title_embedding.create_model('{}-{}'.format(document_name, 'title'))
+        abstract_model = self.abstract_embedding.create_model('{}-{}'.format(document_name, 'abstract'))
+        title_weights = self.title_embedding_multiplier(title_model.outputs[0])
+        abstract_weights = self.abstract_embedding_multiplier(abstract_model.outputs[0])
 
         sum_weights = Add()([title_weights, abstract_weights])
         normalized_weighted_sum = l2_normalize_layer()(sum_weights)
@@ -42,8 +41,8 @@ class DenseWordEmbedding(object):
         return model_inputs, normalized_weighted_sum
 
     def __compile_dense_model(self):
-        query_input, query_model_output = self.__compile_embedding_model()
-        candidate_input, candidate_model_output = self.__compile_embedding_model()
+        query_input, query_model_output = self.__compile_embedding_model('query')
+        candidate_input, candidate_model_output = self.__compile_embedding_model('candidate')
         model_output = cosine_distance(query_model_output, candidate_model_output, self.dense_dims, False)
         model_inputs = query_input + candidate_input
         return Model(inputs=model_inputs, outputs=model_output)
