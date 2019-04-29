@@ -1,7 +1,7 @@
 from random import randint
 
 import numpy as np
-from keras.layers import K
+from keras.layers import K, Reshape, Dot, Flatten
 
 
 # Credits: https://github.com/allenai/citeomatic/blob/master/citeomatic/models/layers.py
@@ -18,6 +18,12 @@ def triplet_loss(y_true, y_pred):
 
 def l2_normalize(x):
     return K.l2_normalize(x, axis=-1)
+
+
+def cosine_distance(tensor1, tensor2, dimensions, normalize):
+    reshaped_input = [(Reshape((1, dimensions))(tensor1)), (Reshape((1, dimensions))(tensor2))]
+    dot_product = Dot(axes=(2, 2), normalize=normalize)(reshaped_input)
+    return Flatten()(dot_product)
 
 
 def random_training_doc_id(num_of_samples, split):

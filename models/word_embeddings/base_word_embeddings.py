@@ -8,9 +8,9 @@ from models.word_embeddings.helpers.utils import l2_normalize
 
 
 class BaseWordEmbeddings(object):
-    def __init__(self, input_dimension, output_dimension):
-        self.dense_dim = input_dimension
-        self.n_features = output_dimension
+    def __init__(self, dense_dim, n_features):
+        self.dense_dim = dense_dim
+        self.n_features = n_features
         self.l1_lambda = Float(default_value=0.0000001)
         self.l2_lambda = Float(default_value=0.00001)
         self.dropout_p = Float(default_value=0)
