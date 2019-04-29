@@ -5,10 +5,6 @@ from dataset_generator.word_embeddings.embedding_triplets_generator import Embed
 from dataset_generator.word_embeddings.features_generator import EmbeddingFeaturesGenerator
 
 
-def foo(d):
-    d['up'] = 1023
-
-
 def train(opts):
     dataset_generator = EmbeddingTripletsGenerator(RawDataset())
     features_generator = EmbeddingFeaturesGenerator(dataset_generator, opts.batch_size)
