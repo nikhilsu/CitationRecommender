@@ -54,3 +54,6 @@ class RawDataset(object):
     def fetch_collated_training_text(self, train_split):
         return list(map(lambda doc: ' '.join((doc['title'], doc['abstract'])),
                         self.__collection(DBConfig.dataset_collection()).find().limit(int(self.count() * train_split))))
+
+    def all_documents_generator(self):
+        return self.__collection(DBConfig.dataset_collection()).find()
