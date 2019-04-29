@@ -7,6 +7,7 @@ from keras.layers import Add
 from keras.optimizers import TFOptimizer
 
 from models.word_embeddings.base_word_embeddings import BaseWordEmbeddings
+from models.word_embeddings.callbacks.save_model_weights import SaveModelWeights
 from models.word_embeddings.custom_layer import LambdaScalarMultiplier
 from models.word_embeddings.helpers.utils import triplet_loss, cosine_distance, l2_normalize_layer
 
@@ -32,6 +33,8 @@ class DenseEmbeddingModel(object):
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
 
+        self.callbacks = [SaveModelWeights(self.embedding_model, opts.weights_directory, opts.checkpoint_frequency)]
+
     def __compile_embedding_model(self, document_name):
         title_model = self.title_embedding.create_model('{}-{}'.format(document_name, 'title'))
         abstract_model = self.abstract_embedding.create_model('{}-{}'.format(document_name, 'abstract'))
@@ -54,6 +57,7 @@ class DenseEmbeddingModel(object):
     def fit(self, dataset_generator):
         self.model.fit_generator(generator=dataset_generator,
                                  steps_per_epoch=self.steps_per_epoch,
+                                 callbacks=self.callbacks,
                                  epochs=self.epochs)
 
     def predict_dense_embeddings(self, documents, pre_trained_weights_path=None):
