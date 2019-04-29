@@ -24,7 +24,7 @@ class DocumentFeaturizer(object):
             max_features=opts.max_features,
             stop_words=self.STOPWORDS
         )
-        self.count_vectorizer.fit(tqdm(title_abstract_of_training_data))
+        self.count_vectorizer.fit(tqdm(title_abstract_of_training_data, desc='Building Count-Vectorizer'))
         self.word_to_index = dict((word, index + 1) for index, word in enumerate(self.count_vectorizer.vocabulary_))
         self.n_features = 1 + len(self.word_to_index)
         opts.n_features = self.n_features

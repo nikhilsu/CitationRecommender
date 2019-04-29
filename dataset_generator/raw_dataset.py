@@ -60,4 +60,4 @@ class RawDataset(object):
 
     def fetch_random_document(self):
         rand_doc_id = randint(1, self.count())
-        return self.find_by_doc_ids(rand_doc_id)
+        return self.find_one_by_doc_id(rand_doc_id)
