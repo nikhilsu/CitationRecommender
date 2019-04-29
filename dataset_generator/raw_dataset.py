@@ -1,3 +1,5 @@
+from random import randint
+
 from mongo_connector.db_config import DBConfig
 from mongo_connector.mongo_client import MongoClient
 
@@ -25,22 +27,20 @@ class RawDataset(object):
     def out_citation_ids(self, doc_id):
         return self.find_one_by_doc_id(doc_id)['out_citations']
 
-    def in_citation_docs(self, doc_id):
-        in_citation_ids = self.in_citation_ids(doc_id)
-        return self.find_by_doc_ids(in_citation_ids)
-
     def out_citation_docs(self, doc_id, max_docs):
         out_citation_ids = self.out_citation_ids(doc_id)
-        return out_citation_ids, self.find_by_doc_ids(out_citation_ids[:min(max_docs, len(out_citation_ids))])
+        return out_citation_ids, self.find_by_doc_ids(out_citation_ids[:min(max_docs, len(out_citation_ids))], True)
 
     def find_one_by_doc_id(self, doc_id):
         doc = self.__collection(DBConfig.dataset_collection()).find_one({'id': str(doc_id)})
         self.__add_in_citation_count_to_doc(doc)
         return doc
 
-    def find_by_doc_ids(self, doc_ids):
+    def find_by_doc_ids(self, doc_ids, post_processing=False):
         output = []
         docs = self.__collection(DBConfig.dataset_collection()).find({'id': {'$in': [str(d_id) for d_id in doc_ids]}})
+        if not post_processing:
+            return docs
         for doc in docs:
             self.__add_in_citation_count_to_doc(doc)
             output.append(doc)
@@ -57,3 +57,7 @@ class RawDataset(object):
 
     def all_documents_generator(self):
         return self.__collection(DBConfig.dataset_collection()).find()
+
+    def fetch_random_document(self):
+        rand_doc_id = randint(1, self.count())
+        return self.find_by_doc_ids(rand_doc_id)

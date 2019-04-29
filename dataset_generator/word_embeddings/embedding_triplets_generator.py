@@ -17,7 +17,7 @@ class EmbeddingTripletsGenerator(object):
 
         lim = self.raw_dataset.count()
         random_ids = [random_id(exclude_list, lim, 0) for _ in range(n)]
-        return self.raw_dataset.find_by_doc_ids(random_ids)
+        return self.raw_dataset.find_by_doc_ids(random_ids, True)
 
     def __nested_citation_neg_document(self, out_citation_ids, n=None):
         nested_out_citations = []
@@ -26,7 +26,7 @@ class EmbeddingTripletsGenerator(object):
 
         ids = range(len(nested_out_citations)) if not n else set([randint(0, len(nested_out_citations) - 1) for _ in
                                                                   range(n)])
-        return self.raw_dataset.find_by_doc_ids([nested_out_citations[index] for index in ids])
+        return self.raw_dataset.find_by_doc_ids([nested_out_citations[index] for index in ids], True)
 
     def __positive_document(self, doc_id, max_docs):
         return self.raw_dataset.out_citation_docs(doc_id, max_docs)
