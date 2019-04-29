@@ -60,7 +60,8 @@ class DocumentFeaturizer(object):
 
     @staticmethod
     def __extract_sim_scores(d_qs, candidates, candidate_selector):
-        return [candidate_selector.cosine_similarity(d_q, candidate) for (d_q, candidate) in zip(d_qs, candidates)]
+        return np.asarray(
+            [candidate_selector.cosine_similarity(d_q, candidate) for (d_q, candidate) in zip(d_qs, candidates)])
 
     def featurize_documents(self, documents):
         features = {
@@ -98,5 +99,5 @@ class DocumentFeaturizer(object):
             features['query-candidate-common-title'] = common_title
             features['query-candidate-common-abstract'] = common_abstract
             features['candidate-citation-count'] = citation_features
-            features['similarity_score'] = similarity_score_features
+            features['similarity-score'] = similarity_score_features
         return features

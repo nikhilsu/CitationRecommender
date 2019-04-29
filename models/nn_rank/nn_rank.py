@@ -11,26 +11,26 @@ class NNRank(object):
     def __init__(self, nn_rank_embedding_model, opts):
         self.opts = opts
         self.dense_dims = opts.dense_dims
-        self.query_text_model = nn_rank_embedding_model['query-text']
+        self.query_title_model = nn_rank_embedding_model['query-title']
         self.query_abstract_model = nn_rank_embedding_model['query-abstract']
-        self.candidate_text_model = nn_rank_embedding_model['candidate-text']
+        self.candidate_title_model = nn_rank_embedding_model['candidate-title']
         self.candidate_abstract_model = nn_rank_embedding_model['candidate-abstract']
 
-        model_inputs = [self.query_text_model.input, self.candidate_text_model.input,
-                        self.query_abstract_model.input, self.candidate_abstract_model]
+        model_inputs = [self.query_title_model.input, self.candidate_title_model.input,
+                        self.query_abstract_model.input, self.candidate_abstract_model.input]
 
         pre_dense_network_output = []
 
-        cos_sim_text = cosine_distance(self.query_text_model.output[0], self.candidate_text_model.output[0],
+        cos_sim_text = cosine_distance(self.query_title_model.output, self.candidate_title_model.output,
                                        self.dense_dims, True)
 
-        cos_sim_abstract = cosine_distance(self.query_abstract_model.output[0], self.candidate_abstract_model.output[0],
+        cos_sim_abstract = cosine_distance(self.query_abstract_model.output, self.candidate_abstract_model.output,
                                            self.dense_dims, True)
 
         pre_dense_network_output.append(cos_sim_text)
         pre_dense_network_output.append(cos_sim_abstract)
 
-        for field in ['text', 'abstract']:
+        for field in ['title', 'abstract']:
             common_type_input = Input(
                 name='query-candidate-common-{}'.format(field), shape=(None,)
             )

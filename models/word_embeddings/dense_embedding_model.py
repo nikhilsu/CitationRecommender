@@ -23,6 +23,8 @@ class DenseEmbeddingModel(object):
 
         embeddings = BaseWordEmbeddings(self.dense_dims, self.n_features, self.l1_lambda, self.l2_lambda,
                                         self.dropout_p)
+        self.nn_rank_model = dict()
+
         self.title_embedding = embeddings
         self.abstract_embedding = embeddings
         self.title_embedding_multiplier = LambdaScalarMultiplier(name='title-scalar-multiplier')
@@ -30,7 +32,6 @@ class DenseEmbeddingModel(object):
         self.model, self.embedding_model = self.__compile_dense_model()
         optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
-        self.nn_rank_model = dict()
 
         self.callbacks = [
             SaveModelWeights([('dense', self.model), ('embedding', self.embedding_model)], opts.weights_directory,
