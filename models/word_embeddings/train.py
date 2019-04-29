@@ -13,7 +13,6 @@ def train(opts):
     features_generator = EmbeddingFeaturesGenerator(dataset_generator, featurizer, opts.batch_size, opts.train_split)
 
     print('Built Count Vectorizer Vocabulary')
-    opts.n_features = featurizer.n_features
     model = DenseEmbeddingModel(featurizer, opts)
     print('Starting training of model')
     model.fit(features_generator.yield_features_generator())

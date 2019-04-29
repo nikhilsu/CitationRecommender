@@ -27,6 +27,7 @@ class DocumentFeaturizer(object):
         self.count_vectorizer.fit(tqdm(title_abstract_of_training_data))
         self.word_to_index = dict((word, index + 1) for index, word in enumerate(self.count_vectorizer.vocabulary_))
         self.n_features = 1 + len(self.word_to_index)
+        opts.n_features = self.n_features
 
     def __index_of_word(self, word):
         return self.word_to_index[word] if word in self.word_to_index else None
