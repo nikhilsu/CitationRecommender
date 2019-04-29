@@ -5,10 +5,14 @@ from mongo_connector.mongo_client import MongoClient
 class RawDataset(object):
     def __init__(self, database=MongoClient.mongo_database()):
         self.database = database
-        self.num_records = None
+        self.__num_records = None
 
     def __collection(self, collection_name):
         return self.database[collection_name]
+
+    def __add_in_citation_count_to_doc(self, doc):
+        in_count = self.__collection(DBConfig.dataset_collection()).find({'out_citations': str(doc['id'])}).count()
+        doc['in_citation_count'] = in_count
 
     # inCitations - List of paper IDs which cited this(doc_id) paper.
     def in_citation_ids(self, doc_id):
@@ -30,13 +34,25 @@ class RawDataset(object):
         return out_citation_ids, self.find_by_doc_ids(out_citation_ids[:min(max_docs, len(out_citation_ids))])
 
     def find_one_by_doc_id(self, doc_id):
-        return self.__collection(DBConfig.dataset_collection()).find_one({'id': str(doc_id)})
+        doc = self.__collection(DBConfig.dataset_collection()).find_one({'id': str(doc_id)})
+        self.__add_in_citation_count_to_doc(doc)
+        return doc
 
-    def find_by_doc_ids(self, doc_ids):
-        return [doc for doc in
-                self.__collection(DBConfig.dataset_collection()).find({'id': {'$in': [str(d_id) for d_id in doc_ids]}})]
+    def find_by_doc_ids(self, doc_ids, post_process=True):
+        output = []
+        docs = self.__collection(DBConfig.dataset_collection()).find({'id': {'$in': [str(d_id) for d_id in doc_ids]}})
+        if not post_process:
+            return docs
+        for doc in docs:
+            self.__add_in_citation_count_to_doc(doc)
+            output.append(doc)
+        return output
 
     def count(self):
-        if self.num_records is None:
-            self.num_records = self.__collection(DBConfig.dataset_collection()).count()
-        return self.num_records
+        if self.__num_records is None:
+            self.__num_records = self.__collection(DBConfig.dataset_collection()).count()
+        return self.__num_records
+
+    def fetch_collated_training_text(self, train_split):
+        return list(map(lambda doc: ' '.join((doc['title'], doc['abstract'])),
+                        self.find_by_doc_ids(range(1, int(self.count() * train_split)))))

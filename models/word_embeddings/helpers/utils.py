@@ -1,3 +1,6 @@
+from random import randint
+
+import numpy as np
 from keras.layers import K
 
 
@@ -15,3 +18,25 @@ def triplet_loss(y_true, y_pred):
 
 def l2_normalize(x):
     return K.l2_normalize(x, axis=-1)
+
+
+def random_training_doc_id(num_of_samples, split):
+    return randint(1, int(num_of_samples * split))
+
+
+TRUE_CITATION_OFFSET = 0.3
+NESTED_NEGATIVE_OFFSET = 0.2
+RANDOM_NEGATIVE_OFFSET = 0.0
+margin_multiplier = 1
+margins_offset_dict = {
+    'positive': TRUE_CITATION_OFFSET * margin_multiplier,
+    'nested_neg': NESTED_NEGATIVE_OFFSET * margin_multiplier,
+    'random_neg': RANDOM_NEGATIVE_OFFSET * margin_multiplier
+}
+CITATION_SLOPE = 0.01
+MAX_CITATION_BOOST = 0.02
+
+
+def compute_label(doc_in_citation_count, offset_type):
+    sigmoid = 1 / (1 + np.exp(-doc_in_citation_count * CITATION_SLOPE))
+    return margins_offset_dict[offset_type] + (sigmoid * MAX_CITATION_BOOST)
