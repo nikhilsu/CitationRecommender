@@ -12,21 +12,21 @@ class DocumentFeaturizer(object):
         'the', 'we', 'our', 'which'
     }
 
-    def __init__(self, raw_dataset, train_split, max_abstract_len, max_title_len):
+    def __init__(self, raw_dataset, opts):
         self.raw_dataset = raw_dataset
-        self.max_abstract_len = max_abstract_len
-        self.max_title_len = max_title_len
+        self.max_abstract_len = opts.max_abstract_len
+        self.max_title_len = opts.max_title_len
 
-        title_abstract_of_training_data = self.raw_dataset.fetch_collated_training_text(train_split)
+        title_abstract_of_training_data = self.raw_dataset.fetch_collated_training_text(opts.train_split)
         max_df_frac = 0.90
-        min_df_frac = 0.000025
         self.count_vectorizer = CountVectorizer(
             max_df=max_df_frac,
-            min_df=min_df_frac,
+            max_features=opts.max_features,
             stop_words=self.STOPWORDS
         )
         self.count_vectorizer.fit(tqdm(title_abstract_of_training_data))
         self.word_to_index = dict((word, index + 1) for index, word in enumerate(self.count_vectorizer.vocabulary_))
+        self.n_features = 1 + len(self.word_to_index)
 
     def __index_of_word(self, word):
         return self.word_to_index[word] if word in self.word_to_index else None

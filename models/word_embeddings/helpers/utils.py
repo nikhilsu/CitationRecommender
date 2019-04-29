@@ -10,7 +10,6 @@ def triplet_loss(y_true, y_pred):
     y_true = K.flatten(y_true)
     pos = y_pred[::2]
     neg = y_pred[1::2]
-    # margin is given by the difference in labels
     margin = y_true[::2] - y_true[1::2]
     delta = K.maximum(margin + neg - pos, 0)
     return K.mean(delta, axis=-1)
@@ -33,7 +32,7 @@ def random_training_doc_id(num_of_samples, split):
 TRUE_CITATION_OFFSET = 0.3
 NESTED_NEGATIVE_OFFSET = 0.2
 RANDOM_NEGATIVE_OFFSET = 0.0
-margin_multiplier = 1
+margin_multiplier = 1.5
 margins_offset_dict = {
     'positive': TRUE_CITATION_OFFSET * margin_multiplier,
     'nested_neg': NESTED_NEGATIVE_OFFSET * margin_multiplier,

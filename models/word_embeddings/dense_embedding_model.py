@@ -9,18 +9,19 @@ from models.word_embeddings.helpers.utils import triplet_loss, l2_normalize, cos
 
 
 class DenseWordEmbedding(object):
-    def __init__(self, dense_dims, n_features, learning_rate, epochs, steps_per_epoch):
-        self.dense_dims = dense_dims
-        embedding = BaseWordEmbeddings(dense_dims, n_features).create_model()
+    def __init__(self, opts):
+        self.dense_dims = opts.dense_dims
+        embedding = BaseWordEmbeddings(opts.dense_dims, opts.n_features, opts.l1_lambda, opts.l2_lambda,
+                                       opts.dropout_p).create_model()
         self.title_embedding_multiplier = LambdaScalarMultiplier(name='title_weights')
         self.abstract_embedding_multiplier = LambdaScalarMultiplier(name='abstract_weights')
         self.title_embedding = embedding
         self.abstract_embedding = embedding
         self.model = self.__compile_dense_model()
-        optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=learning_rate))
+        optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
         self.model.compile(optimizer=optimizer, loss=triplet_loss)
-        self.epochs = epochs
-        self.steps_per_epoch = steps_per_epoch
+        self.epochs = opts.epochs
+        self.steps_per_epoch = opts.steps_per_epoch
 
     def __compile_embedding_model(self):
         title_weights = self.title_embedding_multiplier(self.title_embedding.outputs[0])

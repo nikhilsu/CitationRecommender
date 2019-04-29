@@ -1,19 +1,18 @@
 from keras import Input, Model
 from keras.layers import SpatialDropout1D, K
 from keras.regularizers import l2, l1
-from traitlets import Float
 
 from models.word_embeddings.custom_layer import EmbeddingLayer
 from models.word_embeddings.helpers.utils import l2_normalize
 
 
 class BaseWordEmbeddings(object):
-    def __init__(self, dense_dim, n_features):
+    def __init__(self, dense_dim, n_features, l1_lambda, l2_lambda, dropout_p):
         self.dense_dim = dense_dim
         self.n_features = n_features
-        self.l1_lambda = Float(default_value=0.0000001)
-        self.l2_lambda = Float(default_value=0.00001)
-        self.dropout_p = Float(default_value=0)
+        self.l1_lambda = l1_lambda
+        self.l2_lambda = l2_lambda
+        self.dropout_p = dropout_p
 
         self.direction_embedding = EmbeddingLayer(
             output_dim=self.dense_dim,
