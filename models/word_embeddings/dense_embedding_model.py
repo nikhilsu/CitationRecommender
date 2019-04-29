@@ -5,29 +5,40 @@ from keras.optimizers import TFOptimizer
 
 from models.word_embeddings.base_word_embeddings import BaseWordEmbeddings
 from models.word_embeddings.custom_layer import LambdaScalarMultiplier
-from models.word_embeddings.helpers.utils import triplet_loss, l2_normalize, cosine_distance
+from models.word_embeddings.helpers.utils import triplet_loss, cosine_distance, l2_normalize_layer
 
 
 class DenseWordEmbedding(object):
     def __init__(self, opts):
+        self.dropout_p = opts.dropout_p
+        self.l2_lambda = opts.l2_lambda
+        self.l1_lambda = opts.l1_lambda
+        self.n_features = opts.n_features
         self.dense_dims = opts.dense_dims
-        embedding = BaseWordEmbeddings(opts.dense_dims, opts.n_features, opts.l1_lambda, opts.l2_lambda,
-                                       opts.dropout_p).create_model()
-        self.title_embedding_multiplier = LambdaScalarMultiplier(name='title_weights')
-        self.abstract_embedding_multiplier = LambdaScalarMultiplier(name='abstract_weights')
-        self.title_embedding = embedding
-        self.abstract_embedding = embedding
-        self.model = self.__compile_dense_model()
-        optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
-        self.model.compile(optimizer=optimizer, loss=triplet_loss)
         self.epochs = opts.epochs
         self.steps_per_epoch = opts.steps_per_epoch
 
+        embeddings = BaseWordEmbeddings(self.dense_dims, self.n_features, self.l1_lambda, self.l2_lambda,
+                                        self.dropout_p)
+        self.title_embedding = embeddings
+        self.abstract_embedding = embeddings
+
+        self.model = self.__compile_dense_model()
+        optimizer = TFOptimizer(tf.contrib.opt.LazyAdamOptimizer(learning_rate=opts.learning_rate))
+        self.model.compile(optimizer=optimizer, loss=triplet_loss)
+
     def __compile_embedding_model(self):
-        title_weights = self.title_embedding_multiplier(self.title_embedding.outputs[0])
-        abstract_weights = self.abstract_embedding_multiplier(self.abstract_embedding.outputs[0])
-        normalized_weighted_sum = l2_normalize(Add()([title_weights, abstract_weights]))
-        model_inputs = [self.title_embedding.input, self.abstract_embedding.input]
+        title_model = self.title_embedding.create_model()
+        abstract_model = self.abstract_embedding.create_model()
+        title_embedding_multiplier = LambdaScalarMultiplier()
+        abstract_embedding_multiplier = LambdaScalarMultiplier()
+        title_weights = title_embedding_multiplier(title_model.outputs[0])
+        abstract_weights = abstract_embedding_multiplier(abstract_model.outputs[0])
+
+        sum_weights = Add()([title_weights, abstract_weights])
+        normalized_weighted_sum = l2_normalize_layer()(sum_weights)
+
+        model_inputs = [title_model.input, abstract_model.input]
         return model_inputs, normalized_weighted_sum
 
     def __compile_dense_model(self):

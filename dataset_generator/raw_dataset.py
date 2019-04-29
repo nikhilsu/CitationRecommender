@@ -38,11 +38,9 @@ class RawDataset(object):
         self.__add_in_citation_count_to_doc(doc)
         return doc
 
-    def find_by_doc_ids(self, doc_ids, post_process=True):
+    def find_by_doc_ids(self, doc_ids):
         output = []
         docs = self.__collection(DBConfig.dataset_collection()).find({'id': {'$in': [str(d_id) for d_id in doc_ids]}})
-        if not post_process:
-            return docs
         for doc in docs:
             self.__add_in_citation_count_to_doc(doc)
             output.append(doc)
@@ -55,4 +53,4 @@ class RawDataset(object):
 
     def fetch_collated_training_text(self, train_split):
         return list(map(lambda doc: ' '.join((doc['title'], doc['abstract'])),
-                        self.find_by_doc_ids(range(1, int(self.count() * train_split)))))
+                        self.__collection(DBConfig.dataset_collection()).find().limit(int(self.count() * train_split))))

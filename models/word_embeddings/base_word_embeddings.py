@@ -1,9 +1,9 @@
 from keras import Input, Model
-from keras.layers import SpatialDropout1D, K
+from keras.layers import SpatialDropout1D
 from keras.regularizers import l2, l1
 
 from models.word_embeddings.custom_layer import EmbeddingLayer
-from models.word_embeddings.helpers.utils import l2_normalize
+from models.word_embeddings.helpers.utils import l2_normalize_layer, summation_layer, product_layer
 
 
 class BaseWordEmbeddings(object):
@@ -27,13 +27,16 @@ class BaseWordEmbeddings(object):
             embeddings_initializer='uniform'
         )
 
-        self.dropout = SpatialDropout1D(self.dropout_p)
+        self.dropout_layer = SpatialDropout1D(self.dropout_p)
 
     def create_model(self):
         model_input = Input(shape=(None,), dtype='int32')
-        direction = l2_normalize(self.direction_embedding(model_input))
-        magnitude = self.scalar_magnitude(model_input)
-        composite_embedding = self.dropout(direction * magnitude)
+        direction_embeddings = self.direction_embedding(model_input)
+        magnitude_embedding = self.scalar_magnitude(model_input)
+        normalized_direction_embeddings = l2_normalize_layer()(direction_embeddings)
+        product_embedding = product_layer()([normalized_direction_embeddings, magnitude_embedding])
+        composite_embedding = self.dropout_layer(product_embedding)
 
-        normalized_sum = l2_normalize(K.sum(composite_embedding, axis=1))
+        summation_composite_embeddings = summation_layer()(composite_embedding)
+        normalized_sum = l2_normalize_layer()(summation_composite_embeddings)
         return Model(inputs=model_input, outputs=[normalized_sum])

@@ -1,7 +1,7 @@
 from random import randint
 
 import numpy as np
-from keras.layers import K, Reshape, Dot, Flatten
+from keras.layers import K, Reshape, Dot, Flatten, Lambda
 
 
 # Credits: https://github.com/allenai/citeomatic/blob/master/citeomatic/models/layers.py
@@ -15,8 +15,16 @@ def triplet_loss(y_true, y_pred):
     return K.mean(delta, axis=-1)
 
 
-def l2_normalize(x):
-    return K.l2_normalize(x, axis=-1)
+def l2_normalize_layer():
+    return Lambda(lambda x: K.l2_normalize(x, axis=-1))
+
+
+def summation_layer():
+    return Lambda(lambda x: K.sum(x, axis=1))
+
+
+def product_layer():
+    return Lambda(lambda x: x[0] * x[1])
 
 
 def cosine_distance(tensor1, tensor2, dimensions, normalize):

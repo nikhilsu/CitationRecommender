@@ -1,5 +1,5 @@
 import numpy as np
-from keras_preprocessing.sequence import pad_sequences
+from keras.preprocessing.sequence import pad_sequences
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
@@ -68,8 +68,7 @@ class DocumentFeaturizer(object):
 
         return features
 
-    def extract_features(self, train_examples):
-        d_qs, candidates = train_examples
+    def extract_features(self, d_qs, candidates):
 
         d_q_features = self.__featurize_documents(d_qs)
         candidate_features = self.__featurize_documents(candidates)

@@ -12,4 +12,4 @@ class EmbeddingFeaturesGenerator(object):
         while True:
             triplet = self.triplet_generator.generate_triplets_for_epoch(self.batch_size, self.train_split)
             queries, candidates, labels = triplet
-            yield self.featurizer.extract_features(queries, candidates), np.asarray(labels)
+            yield (self.featurizer.extract_features(queries, candidates), np.asarray(labels))
