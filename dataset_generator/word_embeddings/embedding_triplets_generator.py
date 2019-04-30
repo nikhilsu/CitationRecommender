@@ -51,8 +51,8 @@ class EmbeddingTripletsGenerator(object):
 
         pos_labels = [compute_label(doc['in_citation_count'], 'positive') for doc in d_pos]
 
-        neg_labels = [compute_label(-1 * doc['in_citation_count'], 'nested_neg') for doc in d_nested_neg] + \
-                     [compute_label(-1 * doc['in_citation_count'], 'random_neg') for doc in d_rand_neg]
+        neg_labels = [compute_label(doc['in_citation_count'], 'nested_neg') for doc in d_nested_neg] + \
+                     [compute_label(doc['in_citation_count'], 'random_neg') for doc in d_rand_neg]
         total = len(d_pos) + len(d_nested_neg) + len(d_rand_neg)
         return d_q, [d_pos, d_nested_neg + d_rand_neg], [pos_labels, neg_labels], total
 
