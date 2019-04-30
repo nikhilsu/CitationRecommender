@@ -24,6 +24,9 @@ class EmbeddingTripletsGenerator(object):
         for cite_id in out_citation_ids:
             nested_out_citations += self.raw_dataset.out_citation_ids(cite_id)
 
+        if len(nested_out_citations) == 0:
+            return []
+
         ids = range(len(nested_out_citations)) if not n else set([randint(0, len(nested_out_citations) - 1) for _ in
                                                                   range(n)])
         return self.raw_dataset.find_by_doc_ids([nested_out_citations[index] for index in ids], True)
@@ -35,11 +38,14 @@ class EmbeddingTripletsGenerator(object):
         d_q = self.raw_dataset.find_one_by_doc_id(doc_id)
         n_pos = n_nested_neg = ((3 * required_num_samples) // 10)
         out_citation_ids, d_pos = self.__positive_document(doc_id, n_pos)
-        if len(d_pos) == 0:
-            return []
 
-        d_nested_neg = self.__nested_citation_neg_document(out_citation_ids, n_nested_neg)
-        exclude_list = [doc_id] + out_citation_ids + [document['id'] for document in d_nested_neg]
+        d_nested_neg = self.__nested_citation_neg_document(out_citation_ids, n_nested_neg) if len(d_pos) != 0 else []
+        exclude_list = set()
+        exclude_list.add(int(doc_id))
+        exclude_list.update([int(cite_id) for cite_id in out_citation_ids])
+        for document in d_nested_neg:
+            exclude_list.add(int(document['id']))
+
         n_rand_neg = required_num_samples - (len(d_pos) + len(d_nested_neg))
         d_rand_neg = self.__random_neg_document(exclude_list, n_rand_neg)
 
@@ -60,7 +66,10 @@ class EmbeddingTripletsGenerator(object):
             rand_doc_id = random_training_doc_id(self.raw_dataset.count(), train_split)
             if rand_doc_id not in triplet_ids:
                 triplet_ids.add(rand_doc_id)
-                d_q, candidates, labels, read = self.__triplets(rand_doc_id, min(remaining, triplets_per_doc_id))
+                output = self.__triplets(rand_doc_id, min(remaining, triplets_per_doc_id))
+                if len(output) == 0:
+                    continue
+                d_q, candidates, labels, read = output
                 remaining -= read
                 x_d_qs += [d_q] * read
                 x_candidates += candidates[0]
