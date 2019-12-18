@@ -1,7 +1,7 @@
 traitlets==4.3.2
 keras==2.2.4
 pymongo==3.4.0
-tensorflow==1.12.2
+tensorflow==1.15.0
 numpy==1.14.3
 scikit-learn==0.19.1
 tqdm==4.11.2
